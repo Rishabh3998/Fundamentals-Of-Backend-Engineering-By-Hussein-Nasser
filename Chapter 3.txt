@@ -1,0 +1,136 @@
+Backend Communication Design Patterns
+
+Building Backend applications specifically require communication to clients. For this we have 
+design patterns which we follow, to build these communication layers to communicate with a client.
+Here, We are going to discuss the request response model, synch and async request and execution in general.
+Push model, Poll model, Long Model, Pub-Sub, multiplexing and de-multiplexing, etc..
+
+
+1. Request Response Model (Classic, Simple and Everywhere)
+
+## Introduction:
+
+Note: Client makes a request, Backend processes this request and it responds back to you with a desired response.
+
+- Client sends a request
+- Server parses the request (understands a request)
+- Server processes the request (Execute that request)
+- Server send a Response
+- Client parses the Response and consume
+
+Question: Where does the serialization comes into place here, For eg: We have a JSON as the payload, or XML as 
+the payload, or a protocol buffer as a payload. This serialization and de-serialization is actually processing the request.
+Because parsing the request just defines, where this request starts and where it ends, but then we have to do another
+step to de-serialize the content to something we can understand in the programming language in the server side.
+But there is a cost to de-serialization. Like, why do people move from soap xml to JSON rest.
+
+One of the reasons is the expense of parsing XML is way higher then parsing JSON, actually parsing JSON is also slow.
+That's why people move to a protocol buffer as a quick parser. And this is where plain text vs normal, in a human 
+readable thing comes into the picture.
+
+Json is nice, we can look and understand it easily, same for XML. But the cost is the size, parsing.
+
+
+## Where it is used?:
+
+- Web, HTTP (Req, Res protocol), DNS (Req, Res protocol) [We send a request and ask what is the ip address of google.com
+we client receive ip address with a query ID for identification purposes, note: don't trust order in Backend always use
+ID for everything], SSH.
+
+- RPC (Remote procedure call), It is a very classic kind of a style of programming and it is technically request response.
+You send a request, and that request is basically a request to execute a method, but this method present in a remote server
+instead of the local machine, so we cross the network to execute this method. 
+
+The reason why RPC was popular, is because as a client writing code, as a programmer, we don't know the difference between 
+the local method or remote method. And this kind of abstraction was desired, but the moment we introduce this abstraction, 
+we introduce uncertainties. Like why this method is fast, why this method is slow? Because now we have to understand like 
+this method is slow because we send it through the network and it defeats the purpose of the client to not need to know 
+about this methods nature like local or remote.
+
+- SQL and Database Protocols, the SQL language is a request response protocol, we send a query to a DB and then DB process
+the SQL query, parses the SQL, prepares a plan for execution, then build the response and share it to the client.
+
+- APIs (REST / SOAP / GraphQL), REST (Representational state transfer), SOAP (Simple object access protocol). In REST we 
+fire multiple requests one after another, in GraphQL we query one time but with a proper prompt, and GraphQL handles all 
+the multiple request in the backend and provides the desires response.
+
+
+## Anatomy of a Request / Response 
+
+- A request structure is defined by both client and server and they have to agree on it based on the protocol being used.
+
+- CRLF stands for Carriage Return (CR) and Line Feed (LF), which together form a special character sequence used to mark 
+the end of a line in text files. CR moves the cursor to the beginning of the line, while LF moves it down to the next line. 
+This sequence (\(CRLF\)) is common in Windows and DOS, while Unix-based systems and macOS typically use only the LF character. 
+
+- Carriage Return (CR): The \r character, which moves the cursor to the beginning of the current line.
+
+- Line Feed (LF): The \n character, which moves the cursor down to the next line.
+
+- CRLF (\(CRLF\)): The combined sequence \r\n, which moves the cursor to the beginning of the next line.
+
+- Significance: The CRLF sequence is used in many internet protocols, like HTTP, to split text streams into separate elements. 
+When an attacker injects a CRLF into an HTTP header, it can lead to security vulnerabilities such as CRLF injection attacks.
+
+- Request has a boundary. It should be understand by both client and server for which we have to write code to make an 
+agreement between these two. 
+
+- It is defined by a protocol and message format, The protocol is where everything starts and where it ends, and the message
+format (JSON, XML, Protocol buffer, or any custom thing) is also an another piece, which is serialization and de-serialization 
+we talked about. Then this format has to be understand in both the server and the client.
+
+- Same for the response, the response will have a message format, we have to abide by the protocol.
+
+- Eg: HTTP Request
+
+- Syntax:
+GET /{path} HTTP/1.1(version of the protocol)
+Headers
+<CRLF>
+BODY
+
+
+## Case Study Example:
+
+- Let's say we are building a backend application that uploads an image, a backend image service. we want to upload an image, 
+using the request response pattern.
+
+- Solution: Take the whole image from the client and just send the entire image in the wire to the server. This is simple but 
+the problem is there is a limit here. Eg: Can we send a 7GB image. (Maybe or Maybe not)??
+
+- Send large request with the image (simple solution but not resumable). 
+
+- Chunk image and send a request per chunk (resumable): Chunk the image into small portion and send each request with its chunk.
+In this case if due to any issue, upload stops then next time sever will say that I have these number of chunks now send the rest 
+and I will create the image on my end when i will receive all the chunks. The chunk will transfer through multiple requests.
+
+The above solution are technically request and response model but the style of use is different.
+
+But this doesn't work everywhere:
+Eg:
+- Notification service:
+  - A notification service that say, Hey when someone log in, I want you to basically tell me that someone just log in or someone
+  just uploaded a video, photo, commented on my story. The notification service with requests to response doesn't really jive.
+  
+  - The problem is because the client has to make a request, but in this case, technically the backend has the knowledge and the 
+  client doesn't, so one way to solve this is to say, hey do i have a notification, do i have a notification, ....., this is a 
+  request response cycle which is happening between client and server to fetch if a notification is received or not. We call this
+  technique polling.
+
+  - This polling has scaling issues
+
+- Chat application:
+  - We can use same polling technique, but there will be huge latency.
+  - This will spam the network with empty request which will congest the network and other problems will arise.
+
+- Very Long running requests
+  - Suppose a request is taking too much time due to which you are sitting idle and waiting for th response. In this case instead
+  of request response model you can make the request asynchronous process here.
+
+- What if a client disconnects and we have a very long execution request?
+  - Then if the client comes back it doesn't know, like hey, is it done?
+
+
+## Demo Curl:
+CMD: curl -v --trace out.txt http://google.com
+
