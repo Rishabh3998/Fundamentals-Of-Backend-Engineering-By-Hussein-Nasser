@@ -1,0 +1,28 @@
+Course Outline:
+
+1. First we are gonna talk about Backend communication Design patterns
+   - How client communicate with the Backend, we have limited number of ways for this 
+   communication.
+   - Request/Response, Publish/Subscribe, Asynchronous/Synchronous processing and communication,
+   stateful vs stateless communication.
+   - Kafka and Rabbit in queue, poll models (Long poll, short poll), push model.
+   - server-send-events
+   - Sidecar pattern, de-multiplexing, multiplexing
+
+2. Protocols
+   - Protocol, Rules, Protocol properties
+   - OCI model, UDP, TCP, Hash, ....
+
+3. HTTP/HTTPS
+   - Overview
+   - Comparison with TCP, TLS 1.2, ...
+
+4. Backend Execution Patterns
+   - What is happening under the hood
+   - Process, Thread, Shared memory model, nginx, ....
+
+5. Kernel
+
+6. Proxies and Load Balancers
+   - What is Proxy [Layer 4, Layer 7]?
+   - What is Reverse Proxy?

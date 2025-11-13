@@ -1,3 +1,5 @@
+Introduction (Overview):
+
 This course provides a comprehensive overview of how the backend of an application works. 
 It covers all the essential fundamentals every Backend Engineer must know. 
 Throughout the program, we will dive into key concepts and learn about several important 
@@ -29,7 +31,3 @@ It's just a bunch of bytes, but the work that the application has to do to under
 request is, is it trivial or non-trivial and understanding the cost as being consumed on 
 all of these layers and then up until the request arrives in your event so that an on 
 request event is being triggered.
-
-Course Outline:
-
-1. 
