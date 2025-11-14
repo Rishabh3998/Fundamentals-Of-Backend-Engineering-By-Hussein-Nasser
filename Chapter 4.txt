@@ -1,0 +1,181 @@
+2. Synchronous vs Asynchronous model (Can i do work while waiting?)
+
+The idea behind this is related to a curious questions of a system, If I send a request, If I send a call, If I 
+call a method, can i do other stuff as a process?, while I am waiting for you.
+
+When we first built computing, everything was synchronous. Synchronous is like a sin wave which has same parameter
+and if you superimpose 2 sin waves they will merge because they have same parameters. Asynchronous is like sin wave
+and cos wave got overlapped but they will never be in sync, even with the same parameters.
+
+Most of the time we are gonna find out that async execution is actually preferable than sync, because when we do 
+that we don't want the sever and the client to be in sync, because it is not necessary sometimes client can do 
+something and server can do something which is not related to client.
+
+
+## Synchronous I/O:
+
+- Caller sends a request and blocks the thread in a synchronous process, the process is now blocked and it cannot
+do anything.
+
+- Now suppose this process is executing inside a CPU and CPU sees that this process is blocked and residing idle 
+here, so the CPU will say that this process is not required here as it is blocked, so it will replace this with an
+another process which needs attention. This switching of process according to their current block or non-blocking 
+state is known as context switching.
+
+- Caller cannot execute any code meanwhile the process is blocked.
+
+- Receiver responds, Caller unblocks, and the OS can put our process back to execute the rest of the code.
+
+- Caller and Receiver are in "Sync".
+
+Example of an OS synchronous I/O:
+
+- Program asks an OS to read from disk. 
+
+- Program main thread is taken off the CPU. As the Kernel, it will move on and put the other processes which needs
+attention, and kick out the ones which are blocked and waiting for some sort of response or in loading state.
+
+- When read completes, program can resume execution. The kernel will put the program back in the CPU execution queue.
+
+
+
+## Asynchronous I/O:
+
+- Caller sends a request.
+
+- Caller can work until it gets a response. The Caller will not block and can trigger other calls if the previous 
+one is not executed yet.
+
+- Caller either: 
+  - Checks if the response if ready (e-poll (popular in Linux))
+  - Receiver calls back when it's done (io_uring (Linux))
+  - Spins up a new thread that blocks: Transfer that process to this thread and move on with next process.
+
+- Caller and receiver are not necessary in sync.
+
+## Example of an OS asynchronous call (NodeJS):
+
+- Program spins up a secondary thread
+
+- Secondary thread reads from disk, OS blocks it, but main thread is not blocked and executing other things.
+
+- Main program is still running and executing code.
+
+- Thread finish reading and calls back main thread, now main thread can execute this one.
+
+
+## Synchronous vs Asynchronous in Request Response:
+
+- Synchronicity is a client property.
+
+- Most modern client libraries are asynchronous. (Eg: async, await, fetch, axios, etc..)
+
+- Eg: Clients send an HTTP request and continue doing its work.
+
+
+## Synchronous and Asynchronous in real life:
+
+- Just in case it is still confusing, let's see one example.
+
+- In Synchronous communication the caller waits for a response from receiver
+  - Eg: Asking someone a question in a meeting.
+
+- Asynchronous communication is like the response can come anytime, Caller and receiver can do anything 
+meanwhile.
+  - Eg: Email
+
+
+## Asynchronous workload is everywhere
+
+- Asynchronous Programming (promises, futures)
+
+- Asynchronous Backend processing (We generally use a Data structures like queue, we receive a request and push it
+inside a queue and wait for it to have its turn), These things work like a general async workflow present in JS.
+
+- Asynchronous commits in postgres (When I have a transaction, I begin a transaction and I write update this file, 
+etc, etc, .. in DB, so all the changes that I made are actually being recorded in something called the Wall or the 
+write ahead log, It's a journal, a journal of changes, and that's it)
+
+- The goal of the commit on postgres is that you unblock the caller who calls commit because will say that its ready
+to commit, when we say commit the postgres will call this commit synchronously by-default, and it will only unblock 
+and return the result like succeed or failure, if the wall has been flushed directly to the disk, not to memory but
+to the disk, it has to go directly just to the disk, and the DB will actually skip the OS cache. It goes directly to 
+the disk and then write to the disk, after writing we will get success. This is costly because the work can be large. 
+We call this synchronous commit.
+
+- Asynchronous commits in PostGres will say, like suppose we have a lot of small transactions, or let's say we don't
+have a transaction, we just insert immediately or update immediately, then technically there is not something called
+just insert. In the Backend, the DB always starts a transaction for us always, even if we don't specify one. So, 
+technically if we do an instance without transaction, we begin, we write, and then commit. Tha's how it works, Auto
+commit is on.
+
+- So, in postgres asynchronous commits, once the transaction is logically completed, all the structure updated in 
+memory and then we built the wall, we will attempt to write the wall, but immediately we're going to return success.
+We don't wait for the right operation to disk to actually succeed, we just write it and then hope it will succeed.
+We call this an optimistic approach, the opposite will be the pessimistic approach, and we return commit immediately.
+
+- We think this is dangerous and of-course it is, we could return success to the client and say "success", but on the
+other hand on the backend, the transaction the write might fail to the disk later or maybe on the server crashed and 
+the wall on the memory that was there, we lost it. And in that case whoever read the committed stuff will re-reading
+dirty reads. It is asynchronous, because we immediately committed, returned and then the focus moved on to do other
+things, the client also moved on to other things.
+
+- Asynchronous I/O in Linux (e-poll, io_uring), where if i want to execute a read or a socket read, for example from 
+network, we can ask, we give the file descriptor representing our socket that we listen to, say if there someone, if 
+there someone, ......?
+
+- Or instead of above, we can say, we want to execute a read, but we might be blocked, because the moment we call a 
+read on a file descriptor that is socket say, we want to read from this network, maybe someone just sent us something, 
+If we call read by default without anything, it will be blocking. we will be blocked.
+
+- So, If we do asynchronously, we flag the socket as asynchronous, then we are just going to ask the socket, that tell
+me if this socket is actually has something to read. So, this is called e-poll. So, whenever a bunch of file descriptors
+are ready tell me, ready is different from if it is actually complete. We will know that there is something waiting for 
+us in the kernel to be read. So, when we read actually it's going to take few microseconds to move it from the OS down 
+to your applications. It will be fast. It is kind of synchronous, but I'd rather do it faster than actually being 
+blocked until someone send me data. [e-poll does not work with files], that's why io_uring invented. io_uring works on
+completion instead of readiness. The OS will do the reading in this particular case io_uring.
+
+- Asynchronous replication, Replication is the idea of having a primary writer in the DB and a lot of secondary worker
+DB that are performed for read. So, if we write to our primary DB, like we begin a transaction and we write, write etc.
+insert, insert, ...update, update,... These all steps will be streamed to all replicas, then the replicas will receive
+these changes, then user say commit, then there are 2 ways to do it.
+
+- There is this synchronous way, the synchronous replication commit. If we issue a commit, the main transaction in the 
+primary does not actually commit. It will send all the commits to the secondary, and if all of them or majority of them
+committed the changes, in that case the main primary one will commit. So, the client is actually blocked while it waits,
+for all the secondary ones to commit.
+
+- We can do this asynchronously, we can configure asynchronous replication at at cost of consistency, If we ask main to 
+commit then its main's what's matter to us, so just commit and return, and then asynchronously in the backend, we issue 
+our commits, and make sure everyone actually gets the data. But we don't care about others, we only care about main, so
+commit and give me the result, and even in this asynchronous replication we can perform asynchronous commits.
+
+- Asynchronous OS fsync (fs cache), So, when we write a file for OS, it does not actually directly go to the disk 
+immediately. It stays in OS file system cache, and asynchronously the OS will wait for the lot of writes in the memory
+and then flush them all together, without this, it's going to be a problem, because all the writes will go to the disk
+and it will fragment, so to keep it safe it will first save in the cache and when a threshold hit it will write in the 
+disk. To avoid this disk hampering, OS tries to minimize the amount of writes by batching them in the cache, which is 
+good for the disk.
+
+- But this cache thing is not liked by DB engineers, therefore they ask to by pass this and write everything in the 
+disk immediately, there we have something called fsync which can skip this OS caching. This thing is not good, but we 
+have to implement this for DB guys.
+
+
+## Blocking code:
+
+const fs = require("fs");
+
+console.log("1");
+const res = fs.readFileSync("text.txt"); // Thread blocking
+console.log("file:" + res);
+console.log("2");
+
+## Non-blocking code:
+
+const fs = require("fs");
+
+console.log("1");
+fs.readFile("text.txt", (err, data) => console.log(data.toString())); // Converting Buffer Object to String
+console.log("2");
