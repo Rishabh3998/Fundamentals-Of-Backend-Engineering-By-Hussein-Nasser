@@ -1,0 +1,114 @@
+3. Push model (I want it as soon as possible)
+
+WE are going to talk about another design pattern when it comes to backend execution, and that's 
+push model. If we really want a response as fast as possible, if we really want results immediately, 
+in the client then push is one of the famous patterns to implement in backend.
+
+
+## Request / Response isn't always ideal for certain workloads:
+
+- Client want real time notification from backend
+  
+  - It is something that client wants to know, client does not have the knowledge, the server has the
+  knowledge i.e. if there is something to notify the user. In request / response model we can use 
+  polling like: is there a notification?, is there a notification?, etc.. But this does not scale well.
+  
+  - A user just logged in
+
+  - A message is just received
+
+- Push model is good for certain cases
+  
+  - Like in chatting app, if something is there to show we just push it to show the user, sometimes it could 
+  be bad because a lot of the clients actually cannot handle that load that we're pushing it.
+
+
+## What is push ?
+
+- Client connects to a server
+
+- Server sends data to the client
+
+- Client doesn't have to request anything, the connections establishment is the only thing that is required.
+It is like a unidirectional stream, but from the server side so the client doesn't have to request anything.
+
+- Protocol must be bidirectional, this is a little bit contradicting, as we think that unidirectional will
+work too, Like we have TCP, it can work as a push as effectively, but a bidirectional Protocol is better in 
+this particular case.
+
+- Used by RabbitMQ: When we submit a message in queue inside RabbitMQ, there are clients that consume this queue
+and RabbitMQ, so the model that RabbitMQ chooses, as opposed to a Kafka, is that RabbitMQ will push the content
+of the queue at the moment, we get the result in the queue.
+
+- The moment we get entry in the queue, they could be pushed to the clients that are connected to it.
+
+
+## Case study:
+
+- Suppose a new video is uploaded by MrBeast, T-series, etc, and they have millions of subscribers, do you really 
+think that youtube has this mush of connections established, so if any video comes, they will push the notifications?
+
+- In this case what they do is they tell Apple for ios and use Android cloud and then these are responsible to 
+push that notification down to the user / clients. Parallely other events can trigger and other notifications can 
+be pushed from the server.
+
+- Client does not request anything, but he is still getting the data via this push method. We can have Request / 
+Response actually work with PUSH.
+
+- We are going to see that gRPC actually supports this mode, the unidirectional from the server side streaming.
+
+
+## Push model Pros and cons:
+
+- Pros:
+
+  - Real time
+
+
+- Cons:
+
+  - Clients must be online (It is physically connected to the server that is doing the pushing) to get anything pushed 
+  to it.
+
+  - Clients might not be able to handle the load.
+
+  - Requires a bidirectional Protocol.
+
+  - Polling is preferred for light clients.
+
+
+Eg: A simple websocket simulating chatting (As soon as a message is sent to the server it will be pushed to all clients)
+This is an actual example of push notification, and the reason is because web sockets is actually a bi-directional protocol
+because it uses the TCP link underneath it.
+
+const http = require("http");
+const webSocketServer = require("websocket").server;
+let connections = []; // Loops through these connections an push, push ... to all the connections
+
+// create a raw http server (this will help us create the TCP which will then pass to the websocket to do the)
+const httpServer = http.createServer();
+
+// pass the httpServer Object to the webSocketServer library to do all the job, this class will override the 
+const webSocket = new webSocketServer({"httpServer": httpServer});
+
+// listen on the TCP socket
+httpServer.listen(8080, () => console.log("Server is listening on port 8080))
+
+// When a legit websocket request comes listen to it and get the connection, ..
+websocket.on("request", request => {
+    const connection = request.accept(null, request.origin);
+    connection.on("message", message => {
+        // someone just sent a message tell everybody
+        connections.forEach(c => s.send(`User${connection.socket.remotePort} says`))
+    })
+
+    connections.push(connection)
+
+    // someone just connected, tell everybody
+    connections.forEach(c => s.send(`User${connection.socket.remotePort} says`))
+    ......
+    ....
+    ..
+})
+
+Via this websocket example we created a chat application, which shows us how push works.
