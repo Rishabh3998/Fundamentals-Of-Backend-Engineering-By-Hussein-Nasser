@@ -1,0 +1,66 @@
+5. Long Polling (Request is taking long, I'll check with you later but talk to me only when it's ready)
+
+It is a very neat trick that we can implement in the backend which we can use to avoid all the chattiness of short
+polling. We make a poll request but server does not respond, does not write anything to the socket.
+
+Instead of saying immediately, it's not ready (false), it just wait there, so the client is asynchronously doing 
+its own thing, because it sends the request asynchronous, all clients do this nowadays, but server also knows that
+the job is not ready, the response is not ready, so it will just say okay, it will do its own thing and it will come
+back later.
+
+So, it got the first request, got the job ID and then the next request to do the long polling will block effectively.
+The server will not respond.
+
+Where request / response and polling is not ideal:
+
+1. A request takes long time to process
+   - Upload a youtube video
+
+2. The backend want to send notification (In this case polling is not a good idea but we can use it)
+   - A user just logged in 
+
+3. Short polling is good but chatty
+
+4. Meet Long Polling and is being used for Kafka to effectively for clients to consume a topic in kafka, they do a 
+long polling, they call it the consumer and the consumer will do the long polling request and the kafka will not 
+respond immediately, until there is an entry in the topic, it will then respond back.
+
+
+
+## What is Long Polling?
+
+- Client sends a request 
+- Server immediately responds with a handle
+- Server continues to process the request 
+- Client uses that handle to check for status
+
+For Kafka, what they do it, they know the topic. The topic is already there and we want to subscribe. The consumer
+subscribes to a topic and the subscription works by long polling, Like: Hey, I want to connect to Kafka and the consumer sends
+a request, say, is there any messages in this topic? And if there aren't any messages for that partition in that topic.
+Kafka blocks and it will never reply, so technically the client just keeps waiting, so here we not wasted bandwidth by sending 
+multiple pull requests.
+
+The moment kafka gets a message and writes back to the client's response, and that's how we call it long polling. We are 
+polling and its taking long time to poll, instead of short polling, which is immediately serve the backend responses.
+
+- Server does not reply until it has the response.
+- So we got a handle, we can disconnect and we are less chatty.
+
+Note: Push model with Kafka didn't work for them, they didn't like the push model, because let's say you have a consumer and 
+you connect it to a topic and every time the topic has data, it pushes the data to the clients throat like literally, the 
+consumer sometimes cannot handle the volume of messages.
+
+In RabbitMQ it's the push model, in Kafka it's just long polling.
+
+- Some variations has timeouts too (we cannot just pull forever) [client timeouts, server timeouts].
+
+
+## long Polling Pros and Cons:
+
+- Pros:
+  - Less chatty and backend friendly
+  - Client can still disconnect
+
+- Cons:
+  - Not real time (As we are waiting for our first message response, it may happen that new messages are introduced for which
+  we will get the delayed response, due to this delay we cannot consider this realtime).
