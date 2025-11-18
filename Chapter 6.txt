@@ -1,0 +1,65 @@
+4. Short Polling (Request is taking a while, I'll check with you later)
+
+When people say polling they usually refer to short polling, and the idea of why we call short polling is because
+it just takes a very quick time to poll, like is this thing done or not? that's it, it just keep asking questions
+after a `t` interval of time and this `t` is very small.
+
+So, usually short polling is very common when you have a request that takes a long time to process and we want to
+execute it asynchronously on the backend.
+
+Where request / response is not ideal:
+
+1. A request takes long time to process
+   - Upload a youtube video
+
+2. The backend want to send notification (In this case polling is not a good idea but we can use it)
+   - A user just logged in 
+
+Note: If the backend has an event that happened, we want to know that this event is either a push or a pull, can work
+a request / response does not work in this particular case.
+
+3. Polling is a very good communication style
+
+
+
+## What is Short polling?
+
+- Client sends a request
+
+- Server immediately responds with a handle (this handle is in a form of unique identifier that corresponds to the request)
+and the backend is free to do whatever it can do here, like it can queue, it can persist through some sort of a disk, it can
+put it in memory and then later execute the request. So, the request is not executed immediately in this particular case, but
+you can check later for progress.
+
+- Server continues to process the request maybe or pick it up later, and then the client uses that handle to check for status
+and it will pull for the status [it this thing ready?, is this thing ready?, ...], short refers to the immediate quick response.
+
+Note: So, technically it is a request / response when you look at the polling from the narrow angle, the idea of making the 
+"poll" is the request / response.
+
+- Multiple "short" request response as polls (we broke down one big request / response into multiple request which will give
+a status).
+
+But the whole system is based on this asynchronous execution with short polling.
+
+According to the image diagram of short polling present in images folder, at some point request actually technically finished.
+We only delivered the response when the request actually was completed. So, the next poll will actually have immediately the 
+response in that particular case.
+
+
+
+## Short polling Pros and cons:
+
+- Pros:
+  - Simple to implement
+  - Good for long running request ( if we have request that takes a long time to actually execute, make it a polling system)
+  - Client can disconnect safely
+
+- Cons:
+  - Too chatty (After scaling too much polls can adds up, network is gonna be congested due to lot of requests)
+  - Kills our Network Bandwidth, network bandwidth for Backend is very crucial, because if we put everything too the cloud, 
+  that's how we get billed.
+  - Wasted backend resources.
+
+
+Note: The cost is the networking cost in short polling, a better approach would be to use kafka. It's called long polling.
