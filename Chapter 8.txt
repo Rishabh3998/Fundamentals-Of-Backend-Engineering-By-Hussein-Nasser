@@ -1,0 +1,63 @@
+6. Server sent Events (On request, a very very long response)
+
+It's purely an HTTP thing, it does not work on other protocols. The fact that they moved HTTP being a request to
+response right into this streaming server streaming model is brilliant. We send an HTTP request but we are keep getting
+data continuously, and the trick here is the client understand these chunks, the streaming chunks and parses, the 
+mini response, the messages in between.
+
+So, to the application someone is making a request, and its streaming a bunch of response that is never ending using 
+the chunk streaming.
+
+So, the client is so smart, that it says, it gonna parse these mini messages and I am going to find my mini responses, 
+messages, events.
+
+
+## Limitation of Request / Response:
+
+- Vanilla Request / Response isn't ideal for notification backend.
+
+- Client wants real time notification from backend.
+  - A user just logged in 
+  - A message is just received
+
+- Push works but restrictive
+
+- Server sent events work with Request / Response and it also works with HTTP, i.e it works with any vanilla HTTP server
+that supports it. We don't even need to be a web socket server, so it works on the web and it's designed for HTTP.
+
+
+## What is Server Sent Events?
+
+- A response has start and end
+- Client sends a request
+- Server sends logical events as part of response
+- Server never writes the end of the response, but it needs these mini events that can be parsed
+- It is still a request but an unending response, we get those unending mini response which then collected by the client
+  and turns out to be a collective final response.
+- Client parses the stream data looking for these events and it works with the request response (HTTP).
+
+
+In the image we have a normal HTTP server not HTTP1 because it does not support streaming. A client sends a request, special
+request with a special content type. The server will not actually respond with an event, which is a bunch of bytes that has 
+a start and end, that the client actually needs to understand. It didn't technically finish writing the response yet. Then we
+receive another event and then it again gets parsed, and after all the events and event parsing we can finally close the 
+whole connection.
+
+
+## Server sent events Pros and Cons:
+
+- Pros:
+  - Real time (we raise request we immediately get the response)
+  - Compatible with the request / response
+
+- Cons:
+  - Clients must be online (to receive the unending responses)
+  - Clients might not be able to handle
+  - Polling is preferred for light clients
+  - HTTP/1.1 problem (6 connections)
+
+There is a limitation also of recent events when it comes to HTTP/1.1, if we connected to a domain, and only establish 6
+TCP connections to that domain, this is the limitation arbitrarily put by chrome. Suppose all these 6 are server sent 
+requests and as we know these have unending response, so all 6 will be marked busy. That's why HTTP/2 is a better approach.
+Here in HTTP/2 we can have unlimited streams, we can send multiple streams into one connection, and the limit is approx 200.
+
