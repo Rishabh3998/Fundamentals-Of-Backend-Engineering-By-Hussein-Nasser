@@ -1,0 +1,309 @@
+7. Publish Subscribe (Pub / Sub) (One topic can have many publishers as well as many subscribers/readers)
+
+OVERVIEW:
+In a Pub/Sub (Publish–Subscribe) model, a publisher client sends messages to a central broker (or messaging server) without 
+needing to know who will receive them. Subscriber clients can then subscribe to specific topics and receive messages delivered
+by the broker. Publishers simply publish and move on, while subscribers consume the messages asynchronously.
+
+The Publish-Subscribe (Pub/Sub) model is a messaging pattern where publishers send messages to topics without knowing who will 
+receive them, and subscribers receive messages from topics they're interested in. A central message broker decouples publishers 
+from subscribers.
+
+KEY COMPONENTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Publisher - Entity that sends messages to topics
+2. Subscriber - Entity that listens to and receives messages from topics
+3. Message Broker - Central hub/server that routes messages between publishers and subscribers
+4. Topic - Named channel or subject for messages (e.g., "user.signup", "order.created")
+5. Message - The actual data/event being transmitted
+
+HOW IT WORKS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1: Publisher publishes a message to a specific topic
+Step 2: Message Broker receives the message and stores it
+Step 3: Broker identifies all subscribers interested in that topic
+Step 4: Broker delivers the message to all active subscribers
+Step 5: Subscribers process the message independently and asynchronously
+
+FLOW DIAGRAM:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    Publisher 1
+                         ↓
+                    Publishes to Topic X
+                         ↓
+                 Message Broker (Central)
+                         ↓
+        ┌────────────────┼────────────────┐
+        ↓                ↓                ↓
+    Subscriber 1   Subscriber 2   Subscriber 3
+    (Receives)     (Receives)     (Receives)
+
+REAL-WORLD EXAMPLE: E-COMMERCE ORDER SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Scenario: Customer places an order on Amazon
+
+Publisher: Order Service
+Topic: "order.created"
+
+Subscribers:
+  • Email Service → Sends order confirmation to customer
+  • Inventory Service → Updates stock/decreases quantity
+  • Analytics Service → Logs order metrics and insights
+  • Notification Service → Sends SMS/Push notification
+  • Billing Service → Processes payment and invoice
+  • Shipping Service → Generates shipping label
+
+When an order is placed:
+
+1. Order Service publishes: {"event": "order.created", "orderId": "12345", "userId": "user001", "amount": "$99.99"}
+
+2. Message Broker routes this message to ALL subscribers interested in "order.created"
+
+3. All subscribers process independently:
+   • Email Service: Sends confirmation email immediately
+   • Inventory Service: Updates stock in parallel
+   • Analytics Service: Logs event for dashboards
+   • Notification Service: Sends SMS alert
+   • Billing Service: Processes payment
+   • Shipping Service: Prepares shipment
+
+Key Benefit: The Order Service doesn't wait for any subscriber to complete. It just publishes and continues!
+
+ADVANTAGES OF PUB/SUB:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ DECOUPLING - Publishers and subscribers don't need to know about each other
+✓ SCALABILITY - Can add/remove subscribers without affecting publishers
+✓ ASYNCHRONOUS - Non-blocking communication; subscribers process at their own pace
+✓ FLEXIBILITY - Multiple subscribers can consume same message
+✓ RELIABILITY - Messages can be persisted and retried on failure
+✓ FAULT TOLERANCE - If a subscriber is down, publisher isn't affected
+
+DISADVANTAGES OF PUB/SUB:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✗ COMPLEXITY - Need message broker infrastructure
+✗ EVENTUAL CONSISTENCY - Data consistency delays as processing is async
+✗ DEBUGGING - Harder to trace messages through multiple subscribers
+✗ ORDERING - May lose message order in high-throughput scenarios
+✗ LATENCY - Not suitable for real-time RPC-style communication
+
+POPULAR PUB/SUB TECHNOLOGIES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• RabbitMQ - Traditional message broker with routing
+• Apache Kafka - High-throughput event streaming platform
+• Redis Pub/Sub - Lightweight, in-memory pub/sub
+• AWS SNS/SQS - Cloud-based messaging service
+• Google Cloud Pub/Sub - Managed service
+• Azure Service Bus - Microsoft's messaging platform
+• Apache ActiveMQ - Java-based message broker
+
+PUB/SUB vs OTHER PATTERNS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pub/Sub vs Request-Response (REST API):
+  → Pub/Sub is asynchronous; REST is synchronous
+  → Pub/Sub decouples services; REST creates tight coupling
+  → Pub/Sub better for events; REST better for immediate requests
+
+Pub/Sub vs Point-to-Point (Queues):
+  → Pub/Sub: ONE message goes to MULTIPLE subscribers (one-to-many)
+  → Queue: ONE message goes to ONE consumer (one-to-one)
+  → Pub/Sub: Subscribers must be present to receive (or use persistent topics)
+  → Queue: Messages persisted even if no consumer ready
+
+USE CASES FOR PUB/SUB:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Event Notifications (order created, user signed up)
+2. Microservices Communication (service A triggers work in services B, C, D)
+3. Real-time Analytics (stream data to analytics engines)
+4. Cache Invalidation (notify all services when data changes)
+5. Audit Logging (all events logged centrally)
+6. IoT Data Processing (sensors publish data to multiple analyzers)
+7. Social Media Notifications (new post notifies all followers)
+8. Stock Price Updates (price changes broadcast to multiple traders)
+
+
+## Request / Response pros and cons
+
+- Pros:
+  - Elegant and Simple
+  - Scalable
+
+- Cons:
+  - Bad for multiple receivers
+  - High Coupling
+  - Client and Server have to be running
+  - Chaining, Circuit breaker
+
+## Pub/Sub in Action: VIDEO PROCESSING PIPELINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SCENARIO: User uploads a video (like YouTube)
+
+Step 1: USER UPLOADS VIDEO
+└─→ Upload Service receives the video
+    └─→ Publishes event: "raw_video_uploaded"
+        Message: {videoId: "xyz123", filename: "my_video.mp4", size: "500MB"}
+
+Step 2: MESSAGE REACHES PUBSUB BROKER
+└─→ Broker receives the "raw_video_uploaded" event
+
+Step 3: MULTIPLE SERVICES SUBSCRIBE & PROCESS IN PARALLEL
+├─→ Compress Service (listens to "raw_video_uploaded")
+│   └─→ Compresses the video → Publishes "video_compressed"
+│
+├─→ Format Service (listens to "video_compressed")
+│   └─→ Creates 480p, 1080p, 4K versions → Publishes "video_formatted"
+│
+└─→ Notification Service (listens to "video_formatted")
+    └─→ Notifies user: "Your video is ready!"
+
+WORKFLOW TABLE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step | Event Published       | Service          | Output                  | Next Event
+─────┼──────────────────────┼──────────────────┼─────────────────────────┼──────────────────
+  1  | raw_video_uploaded   | Upload Service   | Video file (500MB)      | -
+  2  | raw_video_uploaded   | Compress Service | Compressed (50MB)       | video_compressed
+  3  | video_compressed     | Format Service   | 480p/1080p/4K files     | video_formatted
+  4  | video_formatted      | Notify Service   | User notification       | -
+
+MESSAGE FLOW DIAGRAM:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                         User Uploads Video
+                              ↓
+                      ┌─ Upload Service ─┐
+                      │                   │
+                      └─→ Publishes: "raw_video_uploaded"
+                              ↓
+                      Message Broker/Queue
+                              ↓
+                    ┌─────────┴─────────┐
+                    ↓                   ↓
+            Compress Service    Format Service    Notification Service
+            (waiting)           (waiting)          (waiting)
+                    ↓                   ↓                    ↓
+            Receives event     Receives event    Receives event
+            "raw_video"        "video_compressed" "video_formatted"
+                    ↓                   ↓                    ↓
+            Compresses MP4    Creates resolutions Sends SMS/Email/Push
+                    ↓                   ↓                    ↓
+            Publishes:        Publishes:         User Notified!
+            "video_compressed" "video_formatted"
+
+
+KEY BENEFITS IN THIS EXAMPLE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ASYNCHRONOUS PROCESSING
+   └─ User doesn't wait for compression/formatting to complete
+      Upload completes instantly, processing happens in background
+
+2. INDEPENDENT SCALING
+   └─ If many videos need compression → Add more Compress Service instances
+   └─ If many videos need formatting → Add more Format Service instances
+   └─ Services scale independently without affecting each other
+
+3. LOOSE COUPLING
+   └─ Upload Service doesn't call Compress Service directly
+   └─ Compress Service doesn't call Format Service directly
+   └─ They communicate only through events/messages
+
+4. FAULT TOLERANCE
+   └─ If Compress Service crashes, Upload Service still works
+   └─ Message stays in queue → Compress Service recovers and processes later
+   └─ No cascading failures
+
+5. EXTENSIBILITY
+   └─ Want to add AI Thumbnail Generation?
+   └─ Just subscribe AI Service to "video_formatted" event
+   └─ No changes needed in existing services!
+
+6. PARALLEL PROCESSING
+   └─ All formats (480p, 1080p, 4K) can be generated in parallel
+   └─ Much faster than sequential processing
+
+
+COMPARISON: WITH vs WITHOUT PUB/SUB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ WITHOUT PUB/SUB (Direct Coupling):
+   Upload Service → calls → Compress Service → calls → Format Service → calls → Notify Service
+   Problems:
+   • User waits for entire pipeline (slow)
+   • If any service is down, entire pipeline breaks
+   • Tightly coupled, hard to modify
+   • Can't scale services independently
+
+✅ WITH PUB/SUB (Event-Driven):
+   Upload Service → publishes event → Message Broker
+   ├─ Compress Service picks it up → publishes new event
+   ├─ Format Service picks it up → publishes new event
+   └─ Notify Service picks it up → completes
+   
+   Benefits:
+   • User upload completes instantly
+   • Each service can fail independently
+   • Loosely coupled, easy to modify
+   • Each service scales independently
+
+
+REAL-WORLD USERS OF THIS PATTERN:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📹 YouTube      → Video processing pipeline
+🎬 Netflix      → Content encoding & streaming
+🚗 Uber         → Ride requests & notifications
+📦 Amazon       → Order processing & tracking
+💳 Stripe       → Payment workflows
+📱 WhatsApp     → Message delivery
+🛒 Shopify      → Order fulfillment
+
+TECHNOLOGIES USED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Apache Kafka           (High-throughput event streaming)
+• RabbitMQ             (Reliable message broker)
+• Google Cloud Pub/Sub  (Managed cloud service)
+• AWS SNS + SQS        (Amazon's messaging services)
+• Redis Pub/Sub        (Lightweight, in-memory)
+• Apache ActiveMQ      (Java-based broker)
+
+
+QUICK REVISION NOTES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 What is Pub/Sub?
+   Producer publishes messages → Consumers subscribe to event(s)
+   Enables async communication
+   Services don't know about each other (loose coupling)
+
+📌 Key Features:
+   ✓ Asynchronous messaging
+   ✓ Loose coupling between services
+   ✓ Improves scalability
+   ✓ Increases reliability & fault tolerance
+   ✓ Enables parallel processing
+
+📌 Best For:
+   • Multi-step workflows (video processing, order handling)
+   • Payment processing pipelines
+   • Sending notifications
+   • Event tracking & analytics
+   • Real-time data processing
+
+📌 Not Suitable For:
+   • Real-time synchronous requests (use REST APIs)
+   • Simple one-off queries
+   • Immediate response requirements
+
+
+## Pub / Sub model pros and cons:
+
+- Pros:
+  - Scaler with multiple receivers
+  - Great for microservices
+  - Loose coupling
+  - Works even while clients not running
+
+- Cons:
+  - Message delivery issues 
+  - Complexity
+  - Network Saturation
