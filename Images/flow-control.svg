@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="220" viewBox="0 0 700 220">
+  <style>
+    .title { font: 14px sans-serif; font-weight: bold; }
+    .label { font: 12px sans-serif; }
+    .box { fill: #fff; stroke: #ccc; }
+    .token { fill: #2b7cff; }
+  </style>
+  <rect x="0" y="0" width="700" height="220" class="box" />
+  <text x="20" y="30" class="title">Flow-control: Per-stream & Connection Window</text>
+
+  <!-- connection window -->
+  <rect x="40" y="50" width="620" height="60" fill="#f3f7ff" stroke="#aac" />
+  <text x="50" y="80" class="label">Connection Window: 64KB available</text>
+
+  <!-- stream windows inside -->
+  <rect x="60" y="90" width="200" height="18" fill="#eaf4ff" stroke="#bcd" />
+  <text x="70" y="103" class="label">Stream s=4 window: 16KB</text>
+
+  <rect x="280" y="90" width="200" height="18" fill="#eaf4ff" stroke="#bcd" />
+  <text x="290" y="103" class="label">Stream s=5 window: 32KB</text>
+
+  <rect x="500" y="90" width="120" height="18" fill="#eaf4ff" stroke="#bcd" />
+  <text x="510" y="103" class="label">Stream s=6 window: 16KB</text>
+
+  <text x="40" y="140" class="label">When a stream uses its window, the peer sends WINDOW_UPDATE to allow more frames.</text>
+</svg>
